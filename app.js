@@ -39,6 +39,8 @@ const els = {
   chartCumGross: document.getElementById('chartCumGross'),
   chartCumNet: document.getElementById('chartCumNet'),
   tradeTableWrap: document.getElementById('tradeTableWrap'),
+  appLayout: document.getElementById('appLayout'),
+  toggleSidebarBtn: document.getElementById('toggleSidebarBtn'),
 };
 
 const COLORS = {
@@ -112,6 +114,7 @@ function bindEvents() {
   els.clearFeesBtn.addEventListener('click', clearCurrentDayFees);
   els.resetLabelsBtn.addEventListener('click', resetCurrentDayLabels);
   els.exportTradesBtn.addEventListener('click', exportTradesCsv);
+  els.toggleSidebarBtn.addEventListener('click', toggleSidebar);
 }
 
 function populateTimezoneSelects() {
@@ -138,6 +141,7 @@ function restoreUiPrefs() {
   if (prefs.ordersTimezone) state.ordersTimezone = prefs.ordersTimezone;
   if (prefs.candlesTimezone) state.candlesTimezone = prefs.candlesTimezone;
   if (prefs.displayTimezone) state.displayTimezone = prefs.displayTimezone;
+  state.sidebarCollapsed = !!prefs.sidebarCollapsed;
 
   els.modeSelect.value = state.mode;
   els.multiplierInput.value = String(state.multiplier);
@@ -145,6 +149,7 @@ function restoreUiPrefs() {
   els.ordersTimezone.value = state.ordersTimezone;
   els.candlesTimezone.value = state.candlesTimezone;
   els.displayTimezone.value = state.displayTimezone;
+  applySidebarState();
 }
 
 function persistUiPrefs() {
@@ -155,7 +160,21 @@ function persistUiPrefs() {
     ordersTimezone: state.ordersTimezone,
     candlesTimezone: state.candlesTimezone,
     displayTimezone: state.displayTimezone,
+    sidebarCollapsed: !!state.sidebarCollapsed,
   });
+}
+
+function applySidebarState() {
+  const collapsed = !!state.sidebarCollapsed;
+  els.appLayout.classList.toggle('sidebar-collapsed', collapsed);
+  els.toggleSidebarBtn.setAttribute('aria-expanded', String(!collapsed));
+  els.toggleSidebarBtn.setAttribute('title', collapsed ? '展开侧边栏' : '折叠侧边栏');
+}
+
+function toggleSidebar() {
+  state.sidebarCollapsed = !state.sidebarCollapsed;
+  applySidebarState();
+  persistUiPrefs();
 }
 
 async function onOrdersSelected(e) {

@@ -15,9 +15,15 @@
       </div>
     </header>
 
-    <main class="layout">
-      <section class="panel controls-panel">
-        <h2>数据导入</h2>
+    <main class="layout" id="appLayout">
+      <section class="panel controls-panel" id="controlsPanel">
+        <div class="controls-panel-head">
+          <h2>数据导入</h2>
+          <button id="toggleSidebarBtn" class="icon-btn" type="button" aria-expanded="true" aria-controls="controlsPanelBody" title="折叠侧边栏">
+            <span class="chevron">‹</span>
+          </button>
+        </div>
+        <div class="controls-panel-body" id="controlsPanelBody">
 
         <div class="control-group">
           <label for="ordersFile">1. 导入交易订单 CSV</label>
@@ -85,6 +91,7 @@
         </div>
 
         <div id="dataStatus" class="status-card muted">还没有导入数据。</div>
+        </div>
       </section>
 
       <section class="content-area">

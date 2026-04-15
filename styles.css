@@ -35,6 +35,12 @@ button, input, select { font: inherit; }
   display: grid;
   grid-template-columns: 360px 1fr;
   gap: 18px;
+  align-items: start;
+  transition: grid-template-columns .22s ease;
+}
+
+.layout.sidebar-collapsed {
+  grid-template-columns: 56px 1fr;
 }
 
 .panel {
@@ -48,6 +54,66 @@ button, input, select { font: inherit; }
   position: sticky;
   top: 14px;
   height: fit-content;
+  overflow: hidden;
+}
+
+.controls-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.controls-panel-head h2 { margin: 0; }
+
+.controls-panel-body {
+  transition: opacity .18s ease;
+}
+
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 10px;
+  background: #283041;
+  color: var(--text);
+  border: 1px solid var(--border);
+  flex: 0 0 auto;
+}
+
+.icon-btn .chevron {
+  display: inline-block;
+  font-size: 24px;
+  line-height: 1;
+  transform: translateY(-1px);
+}
+
+.layout.sidebar-collapsed .controls-panel {
+  padding: 12px 10px;
+}
+
+.layout.sidebar-collapsed .controls-panel-head {
+  margin-bottom: 0;
+  flex-direction: column;
+}
+
+.layout.sidebar-collapsed .controls-panel-head h2 {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.layout.sidebar-collapsed .controls-panel-body {
+  opacity: 0;
+  pointer-events: none;
+  height: 0;
+  overflow: hidden;
+}
+
+.layout.sidebar-collapsed #toggleSidebarBtn .chevron {
+  transform: rotate(180deg) translateY(1px);
 }
 .controls-panel h2,
 .summary-panel h2,
@@ -261,4 +327,31 @@ svg.kline-svg {
   .summary-cards { grid-template-columns: 1fr; }
   .app-shell { padding: 14px; }
   .kline-wrap { min-height: 520px; }
+}
+
+@media (max-width: 1100px) {
+  .layout, .layout.sidebar-collapsed {
+    grid-template-columns: 1fr;
+  }
+  .controls-panel {
+    position: static;
+  }
+  .layout.sidebar-collapsed .controls-panel-body {
+    opacity: 1;
+    pointer-events: auto;
+    height: auto;
+  }
+  .layout.sidebar-collapsed .controls-panel-head {
+    flex-direction: row;
+    margin-bottom: 12px;
+  }
+  .layout.sidebar-collapsed .controls-panel-head h2 {
+    writing-mode: initial;
+    text-orientation: initial;
+    font-size: 24px;
+    color: var(--text);
+  }
+  .layout.sidebar-collapsed #toggleSidebarBtn .chevron {
+    transform: none;
+  }
 }
