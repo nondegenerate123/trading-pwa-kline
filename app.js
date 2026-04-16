@@ -1,3 +1,5 @@
+const APP_VERSION = 'fix4-2026-04-16-1';
+
 const state = {
   fills: [],
   candles: [],
@@ -61,6 +63,9 @@ const COLORS = {
 boot();
 
 function boot() {
+  document.body.dataset.appVersion = APP_VERSION;
+  const v = document.getElementById('appVersion');
+  if (v) v.textContent = APP_VERSION;
   populateTimezoneSelects();
   bindEvents();
   restoreUiPrefs();
@@ -751,11 +756,12 @@ function renderKlineOverlay() {
     const exitY = yScale(trade.exitPrice);
     const anchorX = entryX + (exitX - entryX) * 0.5;
     const anchorY = entryY + (exitY - entryY) * 0.5;
-    const lineColor = trade.direction === 'Long' ? COLORS.darkGreen : COLORS.darkRed;
+    const lineColor = trade.direction === 'Long' ? COLORS.green : COLORS.red;
+    const markerClass = trade.direction === 'Long' ? 'marker-long-dir' : 'marker-short-dir';
 
     lineAndMarkers.push(`<line class="price-line" x1="${entryX}" y1="${entryY}" x2="${exitX}" y2="${exitY}" stroke="${lineColor}"></line>`);
-    lineAndMarkers.push(svgTriangle(entryX, entryY, 7, trade.direction === 'Long' ? 'up' : 'down', trade.direction === 'Long' ? 'marker-long' : 'marker-short'));
-    lineAndMarkers.push(svgCircle(exitX, exitY, 5.2, 'marker-exit'));
+    lineAndMarkers.push(svgTriangle(entryX, entryY, 7, trade.direction === 'Long' ? 'up' : 'down', markerClass));
+    lineAndMarkers.push(svgCircle(exitX, exitY, 5.2, markerClass));
 
     const labelKey = trade.tradeKey;
     const lines = [
@@ -765,10 +771,10 @@ function renderKlineOverlay() {
     ];
     const dims = estimateLabelBox(lines);
     const stored = labelStore[labelKey];
-    const xJitter = (idx % 4) * 10;
-    const yPattern = [-0.6, 0.2, -1.0, 0.6][idx % 4];
-    const defaultX = clamp(anchorX + 14 + xJitter, margin.left + 8, margin.left + plotW - dims.width - 8);
-    const defaultY = clamp(anchorY - dims.height / 2 + yPattern * 12, margin.top + 8, margin.top + plotH - dims.height - 8);
+    const xJitter = (idx % 4) * 8;
+    const yPattern = [-0.5, 0.15, -0.85, 0.5][idx % 4];
+    const defaultX = clamp(anchorX + 12 + xJitter, margin.left + 8, margin.left + plotW - dims.width - 8);
+    const defaultY = clamp(anchorY - dims.height / 2 + yPattern * 10, margin.top + 8, margin.top + plotH - dims.height - 8);
     const labelX = stored?.x ?? defaultX;
     const labelY = stored?.y ?? defaultY;
     const lineEnd = leaderTarget(anchorX, anchorY, labelX, labelY, dims.width, dims.height);

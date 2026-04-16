@@ -279,7 +279,7 @@ svg.kline-svg {
 
 .label-group { cursor: grab; }
 .label-group.dragging { cursor: grabbing; }
-.label-box { fill: rgba(255,255,255,.97); stroke-width: 1; }
+.label-box { fill: rgba(255,255,255,.98); stroke-width: 1; }
 .label-text {
   font-size: 12px;
   user-select: none;
@@ -289,9 +289,8 @@ svg.kline-svg {
 .candle-grid { stroke: rgba(255,255,255,.09); stroke-width: 1; }
 .axis-text { fill: #9ca7b8; font-size: 12px; }
 .price-line { stroke-width: 2; opacity: .72; }
-.marker-long { fill: #69a5ff; stroke: #000; stroke-width: .8; }
-.marker-short { fill: #ffb24d; stroke: #000; stroke-width: .8; }
-.marker-exit { fill: #11151b; stroke: #fff; stroke-width: .8; }
+.marker-long-dir { fill: var(--green); stroke: #05230f; stroke-width: .9; }
+.marker-short-dir { fill: var(--red); stroke: #3a0711; stroke-width: .9; }
 
 @media (max-width: 1200px) {
   .layout, .layout.sidebar-collapsed { grid-template-columns: 1fr; }
@@ -306,3 +305,5 @@ svg.kline-svg {
   .app-shell { padding: 14px; }
   .kline-wrap { min-height: 520px; }
 }
+
+.version-chip{display:inline-flex;align-items:center;border-radius:999px;padding:6px 10px;font-size:12px;background:#11151b;border:1px solid var(--border);color:var(--yellow);margin-top:8px;}
