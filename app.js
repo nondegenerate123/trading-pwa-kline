@@ -11,9 +11,12 @@ const state = {
   displayTimezone: '-04:00',
   currentTrades: [],
   dragState: null,
+  sidebarCollapsed: false,
 };
 
 const els = {
+  appLayout: document.getElementById('appLayout'),
+  toggleSidebarBtn: document.getElementById('toggleSidebarBtn'),
   ordersFile: document.getElementById('ordersFile'),
   candlesFile: document.getElementById('candlesFile'),
   feeFile: document.getElementById('feeFile'),
@@ -112,6 +115,7 @@ function bindEvents() {
   els.clearFeesBtn.addEventListener('click', clearCurrentDayFees);
   els.resetLabelsBtn.addEventListener('click', resetCurrentDayLabels);
   els.exportTradesBtn.addEventListener('click', exportTradesCsv);
+  els.toggleSidebarBtn?.addEventListener('click', toggleSidebar);
 }
 
 function populateTimezoneSelects() {
@@ -138,6 +142,7 @@ function restoreUiPrefs() {
   if (prefs.ordersTimezone) state.ordersTimezone = prefs.ordersTimezone;
   if (prefs.candlesTimezone) state.candlesTimezone = prefs.candlesTimezone;
   if (prefs.displayTimezone) state.displayTimezone = prefs.displayTimezone;
+  state.sidebarCollapsed = !!prefs.sidebarCollapsed;
 
   els.modeSelect.value = state.mode;
   els.multiplierInput.value = String(state.multiplier);
@@ -145,7 +150,9 @@ function restoreUiPrefs() {
   els.ordersTimezone.value = state.ordersTimezone;
   els.candlesTimezone.value = state.candlesTimezone;
   els.displayTimezone.value = state.displayTimezone;
+  applySidebarState();
 }
+
 
 function persistUiPrefs() {
   writeJson('tda_pro_ui_prefs', {
@@ -155,8 +162,25 @@ function persistUiPrefs() {
     ordersTimezone: state.ordersTimezone,
     candlesTimezone: state.candlesTimezone,
     displayTimezone: state.displayTimezone,
+    sidebarCollapsed: !!state.sidebarCollapsed,
   });
 }
+
+function applySidebarState() {
+  const collapsed = !!state.sidebarCollapsed;
+  if (els.appLayout) els.appLayout.classList.toggle('sidebar-collapsed', collapsed);
+  if (els.toggleSidebarBtn) {
+    els.toggleSidebarBtn.setAttribute('aria-expanded', String(!collapsed));
+    els.toggleSidebarBtn.setAttribute('title', collapsed ? '展开侧边栏' : '折叠侧边栏');
+  }
+}
+
+function toggleSidebar() {
+  state.sidebarCollapsed = !state.sidebarCollapsed;
+  applySidebarState();
+  persistUiPrefs();
+}
+
 
 async function onOrdersSelected(e) {
   const file = e.target.files?.[0];
@@ -661,7 +685,7 @@ function renderKlineOverlay() {
 
   const width = 1600;
   const height = 740;
-  const margin = { top: 24, right: 380, bottom: 48, left: 72 };
+  const margin = { top: 24, right: 72, bottom: 48, left: 72 };
   const plotW = width - margin.left - margin.right;
   const plotH = height - margin.top - margin.bottom;
 
@@ -718,10 +742,7 @@ function renderKlineOverlay() {
   const labelStore = readJson('tda_pro_label_positions', {});
   const lineAndMarkers = [];
   const labelGroups = [];
-  const sortedByAnchor = [...state.currentTrades].sort((a, b) => midPrice(b) - midPrice(a));
-  const gutterTop = margin.top + 18;
-  const gutterBottom = margin.top + plotH - 18;
-  const step = sortedByAnchor.length > 1 ? (gutterBottom - gutterTop) / (sortedByAnchor.length - 1) : 0;
+  const sortedByAnchor = [...state.currentTrades].sort((a, b) => a.entryTime - b.entryTime);
 
   sortedByAnchor.forEach((trade, idx) => {
     const entryX = xScale(trade.entryTime.getTime());
@@ -744,8 +765,10 @@ function renderKlineOverlay() {
     ];
     const dims = estimateLabelBox(lines);
     const stored = labelStore[labelKey];
-    const defaultX = margin.left + plotW + 20;
-    const defaultY = gutterTop + idx * step - dims.height / 2;
+    const xJitter = (idx % 4) * 10;
+    const yPattern = [-0.6, 0.2, -1.0, 0.6][idx % 4];
+    const defaultX = clamp(anchorX + 14 + xJitter, margin.left + 8, margin.left + plotW - dims.width - 8);
+    const defaultY = clamp(anchorY - dims.height / 2 + yPattern * 12, margin.top + 8, margin.top + plotH - dims.height - 8);
     const labelX = stored?.x ?? defaultX;
     const labelY = stored?.y ?? defaultY;
     const lineEnd = leaderTarget(anchorX, anchorY, labelX, labelY, dims.width, dims.height);
@@ -753,8 +776,8 @@ function renderKlineOverlay() {
     lineAndMarkers.push(`<line id="leader-${escapeAttr(labelKey)}" class="leader-line" x1="${anchorX}" y1="${anchorY}" x2="${lineEnd.x}" y2="${lineEnd.y}" stroke="${lineColor}"></line>`);
     labelGroups.push(`
       <g class="label-group" data-key="${escapeAttr(labelKey)}" data-anchor-x="${anchorX}" data-anchor-y="${anchorY}" data-box-w="${dims.width}" data-box-h="${dims.height}" data-line-color="${lineColor}" transform="translate(${labelX} ${labelY})">
-        <rect class="label-box" width="${dims.width}" height="${dims.height}" rx="8" stroke="${lineColor}"></rect>
-        <text class="label-text" x="8" y="16" fill="${lineColor}">
+        <rect class="label-box" width="${dims.width}" height="${dims.height}" rx="10" stroke="${lineColor}"></rect>
+        <text class="label-text" x="8" y="17" fill="${lineColor}">
           ${lines.map((line, i) => `<tspan x="8" dy="${i === 0 ? 0 : 14}">${escapeHtml(line)}</tspan>`).join('')}
         </text>
       </g>
@@ -851,7 +874,7 @@ function leaderTarget(anchorX, anchorY, boxX, boxY, boxW, boxH) {
 function estimateLabelBox(lines) {
   const maxLen = Math.max(...lines.map(line => line.length), 14);
   return {
-    width: Math.max(132, maxLen * 6.35 + 16),
+    width: Math.max(138, maxLen * 6.2 + 16),
     height: 14 * lines.length + 12,
   };
 }
