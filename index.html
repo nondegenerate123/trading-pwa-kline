@@ -15,15 +15,9 @@
       </div>
     </header>
 
-    <main class="layout" id="appLayout">
-      <section class="panel controls-panel" id="controlsPanel">
-        <div class="controls-panel-head">
-          <h2>数据导入</h2>
-          <button id="toggleSidebarBtn" class="icon-btn" type="button" aria-expanded="true" aria-controls="controlsPanelBody" title="折叠侧边栏">
-            <span class="chevron">‹</span>
-          </button>
-        </div>
-        <div class="controls-panel-body" id="controlsPanelBody">
+    <main class="layout">
+      <section class="panel controls-panel">
+        <h2>数据导入</h2>
 
         <div class="control-group">
           <label for="ordersFile">1. 导入交易订单 CSV</label>
@@ -91,7 +85,6 @@
         </div>
 
         <div id="dataStatus" class="status-card muted">还没有导入数据。</div>
-        </div>
       </section>
 
       <section class="content-area">
@@ -111,15 +104,7 @@
               <h2>K 线交易打点图</h2>
               <p class="hint">可以直接拖拽右侧标签。虚线引导线会跟随更新，避免文字压住 K 线。</p>
             </div>
-            <div class="kline-tools">
-              <div class="kline-meta" id="klineMeta">等待导入 K 线 CSV</div>
-              <div class="zoom-controls">
-                <button id="zoomOutBtn" type="button" class="secondary">−</button>
-                <span id="zoomLabel" class="zoom-label">100%</span>
-                <button id="zoomInBtn" type="button" class="secondary">+</button>
-                <button id="zoomResetBtn" type="button" class="ghost">Reset</button>
-              </div>
-            </div>
+            <div class="kline-meta" id="klineMeta">等待导入 K 线 CSV</div>
           </div>
           <div id="klineChartWrap" class="kline-wrap empty-state">暂无 K 线图</div>
         </section>

@@ -11,7 +11,6 @@ const state = {
   displayTimezone: '-04:00',
   currentTrades: [],
   dragState: null,
-  klineZoom: 1,
 };
 
 const els = {
@@ -40,12 +39,6 @@ const els = {
   chartCumGross: document.getElementById('chartCumGross'),
   chartCumNet: document.getElementById('chartCumNet'),
   tradeTableWrap: document.getElementById('tradeTableWrap'),
-  appLayout: document.getElementById('appLayout'),
-  toggleSidebarBtn: document.getElementById('toggleSidebarBtn'),
-  zoomInBtn: document.getElementById('zoomInBtn'),
-  zoomOutBtn: document.getElementById('zoomOutBtn'),
-  zoomResetBtn: document.getElementById('zoomResetBtn'),
-  zoomLabel: document.getElementById('zoomLabel'),
 };
 
 const COLORS = {
@@ -119,10 +112,6 @@ function bindEvents() {
   els.clearFeesBtn.addEventListener('click', clearCurrentDayFees);
   els.resetLabelsBtn.addEventListener('click', resetCurrentDayLabels);
   els.exportTradesBtn.addEventListener('click', exportTradesCsv);
-  els.toggleSidebarBtn.addEventListener('click', toggleSidebar);
-  els.zoomInBtn?.addEventListener('click', zoomInKline);
-  els.zoomOutBtn?.addEventListener('click', zoomOutKline);
-  els.zoomResetBtn?.addEventListener('click', resetKlineZoom);
 }
 
 function populateTimezoneSelects() {
@@ -149,8 +138,6 @@ function restoreUiPrefs() {
   if (prefs.ordersTimezone) state.ordersTimezone = prefs.ordersTimezone;
   if (prefs.candlesTimezone) state.candlesTimezone = prefs.candlesTimezone;
   if (prefs.displayTimezone) state.displayTimezone = prefs.displayTimezone;
-  if (prefs.klineZoom) state.klineZoom = prefs.klineZoom;
-  state.sidebarCollapsed = !!prefs.sidebarCollapsed;
 
   els.modeSelect.value = state.mode;
   els.multiplierInput.value = String(state.multiplier);
@@ -158,8 +145,6 @@ function restoreUiPrefs() {
   els.ordersTimezone.value = state.ordersTimezone;
   els.candlesTimezone.value = state.candlesTimezone;
   els.displayTimezone.value = state.displayTimezone;
-  if (els.zoomLabel) els.zoomLabel.textContent = `${Math.round(state.klineZoom * 100)}%`;
-  applySidebarState();
 }
 
 function persistUiPrefs() {
@@ -170,42 +155,7 @@ function persistUiPrefs() {
     ordersTimezone: state.ordersTimezone,
     candlesTimezone: state.candlesTimezone,
     displayTimezone: state.displayTimezone,
-    klineZoom: state.klineZoom,
-    sidebarCollapsed: !!state.sidebarCollapsed,
   });
-}
-
-function applySidebarState() {
-  const collapsed = !!state.sidebarCollapsed;
-  els.appLayout.classList.toggle('sidebar-collapsed', collapsed);
-  els.toggleSidebarBtn.setAttribute('aria-expanded', String(!collapsed));
-  els.toggleSidebarBtn.setAttribute('title', collapsed ? '展开侧边栏' : '折叠侧边栏');
-}
-
-function toggleSidebar() {
-  state.sidebarCollapsed = !state.sidebarCollapsed;
-  applySidebarState();
-  persistUiPrefs();
-}
-
-function setKlineZoom(nextZoom) {
-  const clamped = clamp(nextZoom, 0.75, 4);
-  state.klineZoom = Math.round(clamped * 100) / 100;
-  if (els.zoomLabel) els.zoomLabel.textContent = `${Math.round(state.klineZoom * 100)}%`;
-  persistUiPrefs();
-  if (state.selectedDate && state.candles.length) renderKlineOverlay();
-}
-
-function zoomInKline() {
-  setKlineZoom(state.klineZoom * 1.25);
-}
-
-function zoomOutKline() {
-  setKlineZoom(state.klineZoom / 1.25);
-}
-
-function resetKlineZoom() {
-  setKlineZoom(1);
 }
 
 async function onOrdersSelected(e) {
@@ -704,15 +654,12 @@ function renderKlineOverlay() {
     els.klineChartWrap.className = 'kline-wrap empty-state';
     els.klineChartWrap.textContent = '当前日期没有 K 线数据';
     els.klineMeta.textContent = `K 线时区 ${state.candlesTimezone} · 当前日期无数据`;
-    if (els.zoomLabel) els.zoomLabel.textContent = `${Math.round(state.klineZoom * 100)}%`;
     return;
   }
   els.klineChartWrap.className = 'kline-wrap';
   els.klineMeta.textContent = `${dayBars.length} 根K线 · 数据时区 ${state.candlesTimezone} · 显示时区 ${state.displayTimezone}`;
-  if (els.zoomLabel) els.zoomLabel.textContent = `${Math.round(state.klineZoom * 100)}%`;
 
-  const baseWidth = 1600;
-  const width = Math.round(baseWidth * state.klineZoom);
+  const width = 1600;
   const height = 740;
   const margin = { top: 24, right: 380, bottom: 48, left: 72 };
   const plotW = width - margin.left - margin.right;
@@ -721,7 +668,6 @@ function renderKlineOverlay() {
   const minEpoch = dayBars[0].epoch;
   const maxEpoch = dayBars[dayBars.length - 1].epoch;
   const epochRange = Math.max(maxEpoch - minEpoch, 1);
-  const intervalMs = dayBars.length > 1 ? Math.max(dayBars[1].epoch - dayBars[0].epoch, 60000) : 300000;
   const pad = (Math.max(...dayBars.map(b => b.high)) - Math.min(...dayBars.map(b => b.low))) * 0.06 || 1;
   const minPrice = Math.min(...dayBars.map(b => b.low)) - pad;
   const maxPrice = Math.max(...dayBars.map(b => b.high)) + pad;
@@ -769,14 +715,6 @@ function renderKlineOverlay() {
     }
   }
 
-  const snappedEpoch = epoch => {
-    if (epoch <= minEpoch) return minEpoch;
-    if (epoch >= maxEpoch + intervalMs) return maxEpoch;
-    const idx = Math.floor((epoch - minEpoch) / intervalMs);
-    const clampedIdx = clamp(idx, 0, dayBars.length - 1);
-    return dayBars[clampedIdx].epoch;
-  };
-
   const labelStore = readJson('tda_pro_label_positions', {});
   const lineAndMarkers = [];
   const labelGroups = [];
@@ -786,15 +724,13 @@ function renderKlineOverlay() {
   const step = sortedByAnchor.length > 1 ? (gutterBottom - gutterTop) / (sortedByAnchor.length - 1) : 0;
 
   sortedByAnchor.forEach((trade, idx) => {
-    const entryEpoch = snappedEpoch(trade.entryTime.getTime());
-    const exitEpoch = snappedEpoch(trade.exitTime.getTime());
-    const entryX = xScale(entryEpoch);
-    const exitX = xScale(exitEpoch);
+    const entryX = xScale(trade.entryTime.getTime());
+    const exitX = xScale(trade.exitTime.getTime());
     const entryY = yScale(trade.entryPrice);
     const exitY = yScale(trade.exitPrice);
     const anchorX = entryX + (exitX - entryX) * 0.5;
     const anchorY = entryY + (exitY - entryY) * 0.5;
-    const lineColor = trade.direction === 'Long' ? COLORS.darkGreen : COLORS.darkRed;
+    const lineColor = trade.netPnl >= 0 ? COLORS.darkGreen : COLORS.darkRed;
 
     lineAndMarkers.push(`<line class="price-line" x1="${entryX}" y1="${entryY}" x2="${exitX}" y2="${exitY}" stroke="${lineColor}"></line>`);
     lineAndMarkers.push(svgTriangle(entryX, entryY, 7, trade.direction === 'Long' ? 'up' : 'down', trade.direction === 'Long' ? 'marker-long' : 'marker-short'));
@@ -817,16 +753,16 @@ function renderKlineOverlay() {
     lineAndMarkers.push(`<line id="leader-${escapeAttr(labelKey)}" class="leader-line" x1="${anchorX}" y1="${anchorY}" x2="${lineEnd.x}" y2="${lineEnd.y}" stroke="${lineColor}"></line>`);
     labelGroups.push(`
       <g class="label-group" data-key="${escapeAttr(labelKey)}" data-anchor-x="${anchorX}" data-anchor-y="${anchorY}" data-box-w="${dims.width}" data-box-h="${dims.height}" data-line-color="${lineColor}" transform="translate(${labelX} ${labelY})">
-        <rect class="label-box" width="${dims.width}" height="${dims.height}" rx="10" stroke="${lineColor}"></rect>
-        <text class="label-text" x="12" y="20" fill="${lineColor}">
-          ${lines.map((line, i) => `<tspan x="12" dy="${i === 0 ? 0 : 16}">${escapeHtml(line)}</tspan>`).join('')}
+        <rect class="label-box" width="${dims.width}" height="${dims.height}" rx="8" stroke="${lineColor}"></rect>
+        <text class="label-text" x="8" y="16" fill="${lineColor}">
+          ${lines.map((line, i) => `<tspan x="8" dy="${i === 0 ? 0 : 14}">${escapeHtml(line)}</tspan>`).join('')}
         </text>
       </g>
     `);
   });
 
   els.klineChartWrap.innerHTML = `
-    <svg id="klineSvg" class="kline-svg" viewBox="0 0 ${width} ${height}" style="width:${width}px;height:${height}px;max-width:none;display:block;">
+    <svg id="klineSvg" class="kline-svg" viewBox="0 0 ${width} ${height}">
       <rect width="100%" height="100%" fill="#11151b"></rect>
       <rect x="${margin.left}" y="${margin.top}" width="${plotW}" height="${plotH}" fill="#0f1319" stroke="#303848"></rect>
       ${hGrid}
@@ -913,10 +849,10 @@ function leaderTarget(anchorX, anchorY, boxX, boxY, boxW, boxH) {
 }
 
 function estimateLabelBox(lines) {
-  const maxLen = Math.max(...lines.map(line => line.length), 18);
+  const maxLen = Math.max(...lines.map(line => line.length), 14);
   return {
-    width: Math.max(180, maxLen * 7.2 + 24),
-    height: 16 * lines.length + 18,
+    width: Math.max(132, maxLen * 6.35 + 16),
+    height: 14 * lines.length + 12,
   };
 }
 
