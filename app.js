@@ -751,7 +751,7 @@ function renderKlineOverlay() {
     const exitY = yScale(trade.exitPrice);
     const anchorX = entryX + (exitX - entryX) * 0.5;
     const anchorY = entryY + (exitY - entryY) * 0.5;
-    const lineColor = trade.netPnl >= 0 ? COLORS.darkGreen : COLORS.darkRed;
+    const lineColor = trade.direction === 'Long' ? COLORS.darkGreen : COLORS.darkRed;
 
     lineAndMarkers.push(`<line class="price-line" x1="${entryX}" y1="${entryY}" x2="${exitX}" y2="${exitY}" stroke="${lineColor}"></line>`);
     lineAndMarkers.push(svgTriangle(entryX, entryY, 7, trade.direction === 'Long' ? 'up' : 'down', trade.direction === 'Long' ? 'marker-long' : 'marker-short'));
