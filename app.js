@@ -751,7 +751,7 @@ function renderKlineOverlay() {
     const exitY = yScale(trade.exitPrice);
     const anchorX = entryX + (exitX - entryX) * 0.5;
     const anchorY = entryY + (exitY - entryY) * 0.5;
-    const lineColor = trade.direction === 'Long' ? COLORS.darkGreen : COLORS.darkRed;
+    const lineColor = trade.netPnl >= 0 ? COLORS.darkGreen : COLORS.darkRed;
 
     lineAndMarkers.push(`<line class="price-line" x1="${entryX}" y1="${entryY}" x2="${exitX}" y2="${exitY}" stroke="${lineColor}"></line>`);
     lineAndMarkers.push(svgTriangle(entryX, entryY, 7, trade.direction === 'Long' ? 'up' : 'down', trade.direction === 'Long' ? 'marker-long' : 'marker-short'));
@@ -776,9 +776,9 @@ function renderKlineOverlay() {
     lineAndMarkers.push(`<line id="leader-${escapeAttr(labelKey)}" class="leader-line" x1="${anchorX}" y1="${anchorY}" x2="${lineEnd.x}" y2="${lineEnd.y}" stroke="${lineColor}"></line>`);
     labelGroups.push(`
       <g class="label-group" data-key="${escapeAttr(labelKey)}" data-anchor-x="${anchorX}" data-anchor-y="${anchorY}" data-box-w="${dims.width}" data-box-h="${dims.height}" data-line-color="${lineColor}" transform="translate(${labelX} ${labelY})">
-        <rect class="label-box" width="${dims.width}" height="${dims.height}" rx="10" stroke="${lineColor}"></rect>
-        <text class="label-text" x="8" y="17" fill="${lineColor}">
-          ${lines.map((line, i) => `<tspan x="8" dy="${i === 0 ? 0 : 14}">${escapeHtml(line)}</tspan>`).join('')}
+        <rect class="label-box" width="${dims.width}" height="${dims.height}" rx="8" stroke="${lineColor}"></rect>
+        <text class="label-text" x="6" y="14" fill="${lineColor}">
+          ${lines.map((line, i) => `<tspan x="6" dy="${i === 0 ? 0 : 13}">${escapeHtml(line)}</tspan>`).join('')}
         </text>
       </g>
     `);
@@ -872,10 +872,17 @@ function leaderTarget(anchorX, anchorY, boxX, boxY, boxW, boxH) {
 }
 
 function estimateLabelBox(lines) {
-  const maxLen = Math.max(...lines.map(line => line.length), 14);
+  const canvas = estimateLabelBox.canvas || (estimateLabelBox.canvas = document.createElement('canvas'));
+  const ctx = canvas.getContext('2d');
+  ctx.font = '12px -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif';
+  const maxWidth = Math.max(...lines.map(line => ctx.measureText(line).width), 0);
+  const padX = 6;
+  const topBaseline = 14;
+  const lineHeight = 13;
+  const bottomPad = 5;
   return {
-    width: Math.max(138, maxLen * 6.2 + 16),
-    height: 14 * lines.length + 12,
+    width: Math.ceil(maxWidth + padX * 2 + 1),
+    height: Math.ceil(topBaseline + (lines.length - 1) * lineHeight + bottomPad),
   };
 }
 

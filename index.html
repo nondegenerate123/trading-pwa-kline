@@ -15,15 +15,15 @@
       </div>
     </header>
 
-    <main id="appLayout" class="layout">
-      <section class="panel controls-panel">
+    <main class="layout" id="appLayout">
+      <section class="panel controls-panel" id="controlsPanel">
         <div class="controls-panel-head">
           <h2>数据导入</h2>
-          <button id="toggleSidebarBtn" class="ghost icon-btn" type="button" aria-expanded="true" title="折叠侧边栏">
-            <span class="chevron">◀</span>
+          <button id="toggleSidebarBtn" class="icon-btn" type="button" aria-expanded="true" aria-controls="controlsPanelBody" title="折叠侧边栏">
+            <span class="chevron">‹</span>
           </button>
         </div>
-        <div class="controls-panel-body">
+        <div class="controls-panel-body" id="controlsPanelBody">
 
         <div class="control-group">
           <label for="ordersFile">1. 导入交易订单 CSV</label>
@@ -109,7 +109,7 @@
           <div class="kline-head">
             <div>
               <h2>K 线交易打点图</h2>
-              <p class="hint">可以直接拖拽交易标签。虚线引导线会跟随更新，你可以自己把文字移到不挡 K 线的位置。</p>
+              <p class="hint">可以直接拖拽右侧标签。虚线引导线会跟随更新，避免文字压住 K 线。</p>
             </div>
             <div class="kline-meta" id="klineMeta">等待导入 K 线 CSV</div>
           </div>
