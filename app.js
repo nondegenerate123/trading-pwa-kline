@@ -1,4 +1,4 @@
-const APP_VERSION = 'fix4-2026-04-16-1';
+const APP_VERSION = 'fix5-2026-04-17-1';
 
 const state = {
   fills: [],
@@ -704,7 +704,21 @@ function renderKlineOverlay() {
 
   const xScale = epoch => margin.left + ((epoch - minEpoch) / epochRange) * plotW;
   const yScale = price => margin.top + ((maxPrice - price) / priceRange) * plotH;
+  const inferredBarMs = dayBars.length > 1 ? Math.max(dayBars[1].epoch - dayBars[0].epoch, 60_000) : 300_000;
   const candleWidth = Math.max(plotW / dayBars.length * 0.72, 2);
+
+  const snapEpochToBarCenter = (epoch) => {
+    if (!dayBars.length) return xScale(epoch);
+    let idx = dayBars.findIndex((bar, i) => {
+      const start = bar.epoch;
+      const nextStart = dayBars[i + 1]?.epoch ?? (start + inferredBarMs);
+      return epoch >= start && epoch < nextStart;
+    });
+    if (idx === -1) {
+      idx = epoch < dayBars[0].epoch ? 0 : dayBars.length - 1;
+    }
+    return xScale(dayBars[idx].epoch);
+  };
 
   const hGrid = [0, 0.25, 0.5, 0.75, 1].map(ratio => {
     const price = maxPrice - priceRange * ratio;
@@ -750,8 +764,8 @@ function renderKlineOverlay() {
   const sortedByAnchor = [...state.currentTrades].sort((a, b) => a.entryTime - b.entryTime);
 
   sortedByAnchor.forEach((trade, idx) => {
-    const entryX = xScale(trade.entryTime.getTime());
-    const exitX = xScale(trade.exitTime.getTime());
+    const entryX = snapEpochToBarCenter(trade.entryTime.getTime());
+    const exitX = snapEpochToBarCenter(trade.exitTime.getTime());
     const entryY = yScale(trade.entryPrice);
     const exitY = yScale(trade.exitPrice);
     const anchorX = entryX + (exitX - entryX) * 0.5;
@@ -880,7 +894,7 @@ function leaderTarget(anchorX, anchorY, boxX, boxY, boxW, boxH) {
 function estimateLabelBox(lines) {
   const canvas = estimateLabelBox.canvas || (estimateLabelBox.canvas = document.createElement('canvas'));
   const ctx = canvas.getContext('2d');
-  ctx.font = '12px -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif';
+  ctx.font = '700 12px -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif';
   const maxWidth = Math.max(...lines.map(line => ctx.measureText(line).width), 0);
   const padX = 4;
   const topBaseline = 13;

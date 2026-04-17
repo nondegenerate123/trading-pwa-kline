@@ -282,6 +282,7 @@ svg.kline-svg {
 .label-box { fill: rgba(255,255,255,.98); stroke-width: 1; }
 .label-text {
   font-size: 12px;
+  font-weight: 700;
   user-select: none;
   pointer-events: none;
 }
